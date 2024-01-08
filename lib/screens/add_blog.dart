@@ -1,7 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:http/http.dart' as http;
+import 'package:mini_blogapp/blocs/article_bloc/article_bloc.dart';
+import 'package:mini_blogapp/blocs/article_bloc/article_event.dart';
 
 class AddBlog extends StatefulWidget {
   const AddBlog({Key? key}) : super(key: key);
@@ -27,26 +29,6 @@ class _AddBlogState extends State<AddBlog> {
     setState(() {
       selectedImage = selectedFile;
     });
-  }
-
-  submitForm() async {
-    Uri url = Uri.parse("https://tobetoapi.halitkalayci.com/api/Articles");
-    var request = http.MultipartRequest("POST", url);
-
-    if (selectedImage != null) {
-      request.files
-          .add(await http.MultipartFile.fromPath("File", selectedImage!.path));
-    }
-
-    request.fields['Title'] = title;
-    request.fields['Content'] = content;
-    request.fields['Author'] = author;
-
-    final response = await request.send();
-
-    if (response.statusCode == 201) {
-      Navigator.pop(context, true);
-    }
   }
 
   @override
@@ -81,7 +63,7 @@ class _AddBlogState extends State<AddBlog> {
                     },
                     child: Text(
                       "Galeriden Seç",
-                      style: TextStyle(color: Colors.black87),
+                      style: TextStyle(color : Colors.black87),
                     ),
                   ),
                   ElevatedButton(
@@ -130,13 +112,18 @@ class _AddBlogState extends State<AddBlog> {
                   if (_formKey.currentState!.validate()) {
                     if (selectedImage == null) {
                       return;
-                    }
-
-                    _formKey.currentState!.save();
-                    submitForm();
+                    } _formKey.currentState!.save();
+  context.read<ArticleBloc>().add(AddArticle(
+                      title: title,
+                      content: content,
+                      author: author,
+                      image: selectedImage!.path));
+                    Navigator.pop(context, true);
                   }
                 },
-                child: Text("Gönder", style: TextStyle(color: Colors.black87),),
+                child: const Text("Gönder",
+                style: TextStyle(color: Colors.black87)),
+                
               )
             ],
           ),
